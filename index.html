@@ -120,7 +120,7 @@
         </div>
         <form id="vehicleForm" action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DWU00000F2muL" method="POST" novalidate>
             <input type=hidden name="oid" value="00DWU00000F2muL">
-            <input type=hidden name="retURL" value="thank-you.html">
+            <input type=hidden name="retURL" value="https://palaiu.github.io/thank-you.html">
             
             <div class="form-group">
                 <label for="first_name">First Name *</label>
@@ -156,15 +156,7 @@
                     Please enter a valid email address
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label for="00NWU00000C9VTt">Desired Brand *</label>
-                <input id="00NWU00000C9VTt" maxlength="30" name="00NWU00000C9VTt" type="text" required />
-                <div class="error-message" id="brand_error">
-                    Please specify your desired brand
-                </div>
-            </div>
-            
+           
             <div class="form-group">
                 <label for="00NWU000007bfUp">Vehicle Condition *</label>
                 <select id="00NWU000007bfUp" name="00NWU000007bfUp" title="Vehicle Condition" required>
@@ -220,7 +212,7 @@
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007c6mj">Budget *</label>
+                <label for="00NWU000007c6mj">Budget (€) *</label>
                 <input id="00NWU000007c6mj" name="00NWU000007c6mj" type="text" required 
                        pattern="[0-9,.]+" />
                 <div class="error-message" id="budget_error">
