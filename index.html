@@ -26,6 +26,7 @@
         }
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
         label {
             display: block;
@@ -60,6 +61,26 @@
         input[type="submit"]:hover {
             background-color: #45a049;
         }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: none;
+        }
+        input.error, select.error {
+            border-color: #dc3545;
+        }
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        input:invalid, select:invalid {
+            border-color: #dc3545;
+        }
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -72,57 +93,84 @@
 </head>
 <body>
     <div class="form-container">
+        <div class="success-message" id="successMessage">
+            Form submitted successfully! We'll contact you soon.
+        </div>
         <h1>Vehicle Inquiry Form</h1>
-        <form action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DWU00000F2muL" method="POST">
+        <form id="vehicleForm" action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DWU00000F2muL" method="POST" novalidate>
             <input type=hidden name="oid" value="00DWU00000F2muL">
             <input type=hidden name="retURL" value="http://">
             
             <div class="form-group">
-                <label for="first_name">First Name</label>
-                <input id="first_name" maxlength="40" name="first_name" type="text" required />
+                <label for="first_name">First Name *</label>
+                <input id="first_name" maxlength="40" name="first_name" type="text" required 
+                       pattern="[A-Za-z ]{2,}" />
+                <div class="error-message" id="first_name_error">
+                    Please enter a valid first name (minimum 2 characters, letters only)
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="last_name">Last Name</label>
-                <input id="last_name" maxlength="80" name="last_name" type="text" required />
+                <label for="last_name">Last Name *</label>
+                <input id="last_name" maxlength="80" name="last_name" type="text" required 
+                       pattern="[A-Za-z ]{2,}" />
+                <div class="error-message" id="last_name_error">
+                    Please enter a valid last name (minimum 2 characters, letters only)
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="phone">Phone</label>
-                <input id="phone" maxlength="40" name="phone" type="text" required />
+                <label for="phone">Phone *</label>
+                <input id="phone" maxlength="40" name="phone" type="text" required 
+                       pattern="[0-9+\-\s]{10,}" />
+                <div class="error-message" id="phone_error">
+                    Please enter a valid phone number (minimum 10 digits)
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="email">Email</label>
-                <input id="email" maxlength="80" name="email" type="text" required />
+                <label for="email">Email *</label>
+                <input id="email" maxlength="80" name="email" type="email" required />
+                <div class="error-message" id="email_error">
+                    Please enter a valid email address
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU00000C9VTt">Desired Brand</label>
-                <input id="00NWU00000C9VTt" maxlength="30" name="00NWU00000C9VTt" type="text" />
+                <label for="00NWU00000C9VTt">Desired Brand *</label>
+                <input id="00NWU00000C9VTt" maxlength="30" name="00NWU00000C9VTt" type="text" required />
+                <div class="error-message" id="brand_error">
+                    Please specify your desired brand
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007bfUp">Vehicle Condition</label>
-                <select id="00NWU000007bfUp" name="00NWU000007bfUp" title="Vehicle Condition">
+                <label for="00NWU000007bfUp">Vehicle Condition *</label>
+                <select id="00NWU000007bfUp" name="00NWU000007bfUp" title="Vehicle Condition" required>
                     <option value="">--None--</option>
                     <option value="New">New</option>
                     <option value="Second-Hand">Second-Hand</option>
                 </select>
+                <div class="error-message" id="condition_error">
+                    Please select a vehicle condition
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007c6l7">Transmission</label>
-                <select id="00NWU000007c6l7" name="00NWU000007c6l7" title="Transmission">
+                <label for="00NWU000007c6l7">Transmission *</label>
+                <select id="00NWU000007c6l7" name="00NWU000007c6l7" title="Transmission" required>
                     <option value="">--None--</option>
                     <option value="Automatic">Automatic</option>
                     <option value="Manual">Manual</option>
                 </select>
+                <div class="error-message" id="transmission_error">
+                    Please select a transmission type
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007bzfC">Vehicle Type</label>
-                <select id="00NWU000007bzfC" name="00NWU000007bzfC" title="Vehicle Type">
+                <label for="00NWU000007bzfC">Vehicle Type *</label>
+                <select id="00NWU000007bzfC" name="00NWU000007bzfC" title="Vehicle Type" required>
                     <option value="">--None--</option>
                     <option value="Sedan">Sedan</option>
                     <option value="SUV">SUV</option>
@@ -131,26 +179,152 @@
                     <option value="Station Wagon">Station Wagon</option>
                     <option value="Coupé">Coupé</option>
                 </select>
+                <div class="error-message" id="vehicle_type_error">
+                    Please select a vehicle type
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007c513">Engine Type</label>
-                <select id="00NWU000007c513" name="00NWU000007c513" title="Engine Type">
+                <label for="00NWU000007c513">Engine Type *</label>
+                <select id="00NWU000007c513" name="00NWU000007c513" title="Engine Type" required>
                     <option value="">--None--</option>
                     <option value="Gasoline">Gasoline</option>
                     <option value="Diesel">Diesel</option>
                     <option value="Electric">Electric</option>
                     <option value="Hybrid">Hybrid</option>
                 </select>
+                <div class="error-message" id="engine_type_error">
+                    Please select an engine type
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="00NWU000007c6mj">Budget</label>
-                <input id="00NWU000007c6mj" name="00NWU000007c6mj" type="text" />
+                <label for="00NWU000007c6mj">Budget *</label>
+                <input id="00NWU000007c6mj" name="00NWU000007c6mj" type="text" required 
+                       pattern="[0-9,.]+" />
+                <div class="error-message" id="budget_error">
+                    Please enter a valid budget amount (numbers only)
+                </div>
             </div>
             
             <input type="submit" value="Submit Inquiry">
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('vehicleForm');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            
+            // Show error message and add error class
+            function showError(input, message) {
+                const errorDiv = document.getElementById(input.id + '_error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'block';
+                    input.classList.add('error');
+                }
+            }
+
+            // Hide error message and remove error class
+            function hideError(input) {
+                const errorDiv = document.getElementById(input.id + '_error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                    input.classList.remove('error');
+                }
+            }
+
+            // Validate email format
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email.toLowerCase());
+            }
+
+            // Validate phone format
+            function isValidPhone(phone) {
+                const re = /^[0-9+\-\s]{10,}$/;
+                return re.test(phone);
+            }
+
+            // Validate name format
+            function isValidName(name) {
+                const re = /^[A-Za-z ]{2,}$/;
+                return re.test(name);
+            }
+
+            // Add blur event listeners to all required fields
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(input);
+                });
+
+                input.addEventListener('input', function() {
+                    hideError(input);
+                });
+            });
+
+            // Validate individual field
+            function validateField(input) {
+                if (!input.value) {
+                    showError(input);
+                    return false;
+                }
+
+                switch(input.id) {
+                    case 'email':
+                        if (!isValidEmail(input.value)) {
+                            showError(input);
+                            return false;
+                        }
+                        break;
+                    case 'phone':
+                        if (!isValidPhone(input.value)) {
+                            showError(input);
+                            return false;
+                        }
+                        break;
+                    case 'first_name':
+                    case 'last_name':
+                        if (!isValidName(input.value)) {
+                            showError(input);
+                            return false;
+                        }
+                        break;
+                    case '00NWU000007c6mj': // Budget field
+                        if (!/^[0-9,.]+$/.test(input.value)) {
+                            showError(input);
+                            return false;
+                        }
+                        break;
+                }
+
+                hideError(input);
+                return true;
+            }
+
+            // Form submission handler
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                let isValid = true;
+
+                // Validate all required fields
+                inputs.forEach(input => {
+                    if (!validateField(input)) {
+                        isValid = false;
+                    }
+                });
+
+                if (isValid) {
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Submit the form after a brief delay to show the success message
+                    setTimeout(() => {
+                        form.submit();
+                    }, 1000);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
