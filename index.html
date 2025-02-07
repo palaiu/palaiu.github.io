@@ -89,6 +89,13 @@
             max-width: 200px;
             height: auto;
         }
+        .intro-text {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.6;
+            font-size: 16px;
+        }
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -108,6 +115,9 @@
             Form submitted successfully! We'll contact you soon.
         </div>
         <h1>Vehicle Inquiry Form</h1>
+        <div class="intro-text">
+            Welcome! Please fill out this form to help us find your ideal vehicle. Our team will carefully review your preferences and contact you with personalized recommendations that match your requirements. All fields marked with * are required.
+        </div>
         <form id="vehicleForm" action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DWU00000F2muL" method="POST" novalidate>
             <input type=hidden name="oid" value="00DWU00000F2muL">
             <input type=hidden name="retURL" value="http://">
