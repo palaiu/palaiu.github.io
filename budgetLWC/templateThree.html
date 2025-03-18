@@ -1,0 +1,210 @@
+<template>
+	<div class="container">
+		<template if:true={openSpinner}>
+			<lightning-spinner alternative-text="Loading" size="medium" class="spinnerContent"></lightning-spinner>
+		</template>
+
+			<!-- Back Icon -->
+			<div class="slds-p-top_small slds-p-left_x-small">
+				<lightning-button-icon class="back-icon" 
+									icon-name="utility:back"  
+									variant="container" 
+									alternative-text="Back" 
+									title="Back" 
+									onclick={handleBackButton}>
+				</lightning-button-icon>
+			</div>
+
+			<div class="slds-p-vertical_medium slds-p-horizontal_medium">
+				<!-- Title -->
+				<h1 class="titleComponent slds-p-bottom_x-large">Agregar una pieza</h1>
+
+				<!-- Total Price -->
+				<div>
+					<lightning-input label="Busque la pieza a agregar"
+							class="slds-p-top_x-small"
+							type="search"
+							onchange={onchangeProductName}>
+							<!-- value={selectedValue} -->
+					</lightning-input>
+
+					<!-- List of Products -->
+					<div if:true={productsVisible} class="productListBox slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
+						<div class="slds-listbox slds-listbox_vertical" role="presentation">
+							<template for:each={pricebookItemsList} for:item="product">
+								<div key={product.value} 
+									data-value={product.value} 
+									role="presentation"
+									class="searchItemContainer slds-listbox__item slds-m-horizontal_medium slds-m-bottom_medium">
+									
+										<lightning-layout horizontal-align="spread" class="lightning-layout">
+											<lightning-layout-item class="info-container">
+												<div class="searchItem slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
+													<span title={product.label}>{product.label}</span>
+													<span style="display: block;" class="slds-truncate searchNumber" title={product.reference}>Ref: {product.reference}</span>
+													<div style="text-align: end;">
+														<span style="display: block;" class="slds-truncate searchNumber" title="Precio unitario">Precio unitario</span>
+														<span  class="slds-truncate searchNumber" title={product.unitPrice}>{product.unitPrice}€</span>
+													</div>
+												</div>
+											</lightning-layout-item>
+											<lightning-layout-item class="add-Button-Container" >
+												<button class="add-Button" data-product-id={product.value} onclick={handlerAddProduct}>
+													<lightning-icon class="add-icon"
+																	icon-name="utility:add"
+																	alternative-text="Add"
+																	title="Add">
+													</lightning-icon>
+												</button>
+											</lightning-layout-item>
+										</lightning-layout> 
+										
+									</div>
+							</template>
+						</div>
+					</div>
+
+					
+				</div>
+			</div>
+		
+
+		<!-- SHOPPING CART -->
+		<!-- <div class="shoppingCartContainer">
+			<div class="slds-p-vertical_medium" onclick={toggleOverlay}>
+				<div class="toggleshoppingCart "></div>
+			</div>
+			<div class="slds-p-vertical_medium slds-p-horizontal_medium">
+				<div style="display: flex; align-items: center;" >
+					<div>
+						<lightning-icon class="slds-p-right_small"
+								size="small"
+								icon-name="utility:cart" 
+								alternative-text="Cart" 
+								title="Cart">
+						</lightning-icon>
+					</div>
+					<div>
+						<span class="titleComponent slds-p-bottom_x-large">Añadiento a este presupuesto</span>
+					</div>
+				</div>
+			</div>
+		</div> -->
+
+
+		<div if:true={showPieceDetailsScreen}>
+			<!-- Floated Screens -->
+			<div class="float-container">
+				<!-- Piece Details  -->
+				<div class="float-container-details slds-p-horizontal_medium">
+					<!-- Close Icon  -->
+					<div class="slds-p-top_small button-align-rigth">
+						<lightning-button-icon class="back-icon" 
+											icon-name="utility:close"  
+											variant="container" 
+											alternative-text="Close" 
+											title="Close" 
+											onclick={handleBackButton}>			
+						</lightning-button-icon>
+					</div>
+
+					<!-- Pieces Icon   -->
+					<div class="slds-p-top_medium">
+						<lightning-icon class="icon-center"
+											icon-name="utility:custom_apps"  
+											variant="container" 
+											alternative-text="Pieces" 
+											title="Pieces" 
+											size="medium">
+						</lightning-icon>
+					</div>
+
+					<!-- Title Piece   -->
+					<div style="width: 70%; margin: 0 auto; text-align: center;">
+						<h1 class="titleComponent slds-p-top_large slds-p-bottom_x-small">{selectedIndividualPricebookItem.label}</h1>
+						<p class="grayTitle">Ref. {selectedIndividualPricebookItem.reference}</p>
+					</div>
+
+					<!-- Increment Number of Piece   -->
+					<div class="counter-container slds-p-vertical_large">
+						<lightning-icon class="slds-p-right_small" style="cursor: pointer;"
+										icon-name="utility:dash"  
+										size="small"
+										onclick={decrement}>
+						</lightning-icon>
+						<div class="dash"></div>
+						<span class="totalSelectedPiece slds-p-horizontal_small">{totalSelectedPiece}</span>
+						<div class="dash"></div>
+						<lightning-icon class="slds-p-left_small" style="cursor: pointer;"
+										icon-name="utility:add"  
+										size="small"
+										onclick={increment}>
+						</lightning-icon>
+					</div>
+
+					<!-- Toogles   -->
+					<div>
+						<div class="slds-form-element slds-p-vertical_small">
+							<label class="slds-checkbox_toggle slds-grid">
+								<div>
+									<span class="slds-form-element__label slds-m-bottom_none">Cubierto por garantia fabricante</span>
+								</div>
+								<div>
+									<input type="checkbox" checked={selectedIndividualPricebookItem.warantyFactory} onclick={handleWarantyFactory}/>
+									<span class="slds-checkbox_faux_container" aria-live="assertive">
+										<span class="slds-checkbox_faux"></span>
+									</span>
+								</div>
+							</label>
+						</div>
+						<div class="slds-form-element slds-p-vertical_small">
+							<label class="slds-checkbox_toggle slds-grid">
+								<span class="slds-form-element__label slds-m-bottom_none">Cubierto por la empresa</span>
+								<input type="checkbox" checked={selectedIndividualPricebookItem.warantyEnterprise} onclick={handleWarantyEnterprise}/>
+								<span class="slds-checkbox_faux_container" aria-live="assertive">
+									<span class="slds-checkbox_faux"></span>
+								</span>
+							</label>
+						</div>
+					
+						<!-- Discount  -->
+						<div class="slds-p-vertical_small" style="display: flex; align-items: end; width: 5rem;">
+							<lightning-input type="number" value={pieceDetailDiscount} label="Descuento" onchange={handleDiscount}></lightning-input>
+							<span style="font-size:1rem" class="slds-p-left_small">%</span>
+						</div>
+
+						<!-- IVA  -->
+						<div class="slds-p-vertical_small">
+							<lightning-input type="number" 
+											label="Tasas de IVA aplicables" 
+											value={percentageIVA} 
+											formatter="percent" 
+											disabled >
+							</lightning-input>
+						</div>
+					</div>
+
+					<!-- Piece Total  -->
+					<div style="text-align: right;">
+						<p class="grayTitle">incl. IVA</p>
+						<h1 class="titleComponent">{selectedIndividualPricebookItem.newTotalPrice}€</h1>
+						<p style="font-weight: 500; font-size: 0.7rem;">Precio unitario: {selectedIndividualPricebookItem.unitPrice}€</p>
+					</div>
+
+					<!-- Buttons  -->
+					<div style="display: grid; width: 15rem; margin: 0 auto;">
+						<div style="margin: 0 auto" class="slds-p-bottom_xx-small">
+							<button class="button-actionCancel" onclick={handlerCancelChanges}>Eliminar Partida</button>
+						</div>
+
+						<div style="display: grid; width: 15rem;" class="slds-p-top_xx-small">
+							<button class="button-actionContinue" onclick={handlerConfirmChanges}>Añadir al Presupuesto</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+
+	</div>
+</template>

@@ -1,0 +1,127 @@
+<!-- 
+	To do: 
+	Create custom labels JS file
+	Better effects cancel-button
+-->
+
+<template>
+	<div class="container" >
+		<div class="slds-p-vertical_medium slds-p-horizontal_xx-large">
+			<div class="slds-text-align_center">
+			<div class="slds-m-vertical_xx-large">
+				<lightning-icon class="add-icon"
+								icon-name="utility:add" 
+								alternative-text="Add" 
+								title="Add">
+				</lightning-icon>
+			</div>
+			<h1 class="budgetTitleComponent slds-p-bottom_x-large">Nuevo presupuesto piezas y mano de obra</h1>
+			</div>
+		
+			<lightning-input class="slds-p-bottom_medium"
+							label="Objeto del presupuesto - Opcional" 
+							type="text"
+							onchange={handlerBudgetTitle}>
+			</lightning-input>
+
+			<lightning-combobox class="slds-p-bottom_medium"
+								name="techType" 
+								label="Tipo de presupuesto" 
+								value={selectedDevisType} 
+								placeholder="Elige una opción" 
+								options={devisTypePicklistOptions}
+								onchange={onDevisTypeChange}
+								required>
+			</lightning-combobox>
+			
+			<lightning-radio-group class="slds-p-top_medium"
+								name="equipmentsGroup"
+								label="Equipos relacionados"
+								options={assets}
+								value={Name}
+								onchange={handleRadioEquipments}
+								type="radio"
+								required>
+			</lightning-radio-group>
+		</div>
+		<!-- Footer -->
+		<div class="footer-container slds-text-align_center">
+			<div class="buttons slds-p-top_small">
+				<lightning-button label="Cancelar" 
+							title="Cancelar" 
+							variant="brand"
+							onclick={handleClose} 
+							class="cancel-button slds-m-left_x-small">
+				</lightning-button>
+			</div>
+			<div class="buttons slds-p-top_small">
+				<lightning-button label="Crear presupuesto" 
+								title="CrearPresupuesto" 
+								variant="brand"
+								onclick={handleCreateBudget}
+								class="create-button slds-m-left_x-small"
+								disabled={createButtonLock}>
+				</lightning-button>
+			</div>
+		</div>
+	</div>
+	
+
+<!-- <div class="popin-container">
+	<div class="popin-transparent"></div>
+
+	<div class="popin">
+	<div class="popin-container-icon">
+		<div class="popin-icon">
+		<img src={imageUrl} alt="IMAGEN" />
+		</div>
+	</div>
+
+	
+
+	
+
+	<lightning-input class="devis-subject" 
+						label="Objeto del presupuesto" 
+						type="text">
+	</lightning-input>
+
+	<lightning-combobox name="techType" label="Tipo de presupuesto" value={selectedDevisType} placeholder="Elige una opción" options={devisTypePicklistOptions}
+		onchange={onDevisTypeChange} >
+	</lightning-combobox>
+
+	<div class="concerned-equipement-container">
+		<h3 class="concerned-equipement-title">Equipos relacionados</h3>
+
+		<div class="equipement-choices">
+		<template if:true={assets}>
+			<lightning-card title="Equipos">
+			<template for:each={assets} for:item="asset">
+				<div class="radio-check" key={asset.Id}>
+				<input type="radio" name="asset" />
+				<label>{asset.Id}&nbsp;&nbsp;&nbsp;{asset.Name} </label>
+				</div>
+			</template>
+			<button class="add-equipement-button" onclick={switchTemplate}>
+				<img src={imageUrl} alt="Logo" class="logo">
+				Agregar equipo
+			</button>
+			</lightning-card>
+		</template>
+		</div>
+
+
+	</div>
+
+	<div class="footer-buttons-wrapper">
+		<button class="cancel-button-container" onclick={close}>
+		Cancelar
+		</button>
+
+		<button class="register-button-container" onclick={switchTemplate}>
+		Crear presupuesto
+		</button>
+	</div>
+	</div>
+</div> -->
+</template>

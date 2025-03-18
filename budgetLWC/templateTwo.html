@@ -1,0 +1,272 @@
+<template>
+	<div class="container" >
+
+		<!-- Back Icon -->
+		<div class="slds-p-top_small slds-p-left_x-small">
+			<lightning-button-icon class="back-icon" 
+								icon-name="utility:back"  
+								variant="container" 
+								alternative-text="Back" 
+								title="Back" 
+								onclick={handleBackButton}>
+			</lightning-button-icon>
+		</div>
+		
+
+		<div class="slds-p-vertical_medium slds-p-horizontal_medium">
+			<!-- Title -->
+			<h1 class="titleComponent slds-p-bottom_x-large">Presupuesto piezas y mano de obra</h1>
+
+			<!-- Total Price -->
+			<div>
+				<p class="grayTitle">Total (incl. IVA)</p>
+				<span class="totalPrice">0</span>
+				<span class="slds-text-title_bold">€</span>
+			</div>
+
+			<!-- Title and services / equipments -->
+			<div class="slds-p-vertical_medium">
+				<span class="slds-text-title_bold">{budgetTitle}</span>
+				<br/>
+				<span class="slds-text-title_bold">{selectedDevisType}</span>
+				<br/>
+				<span class="slds-text-title_bold">---------</span>
+				<br/>
+				<span class="slds-text-title_bold">{selectedRadioEquipments.label}</span>	
+			</div>
+
+			<!-- Combo boxs -->
+			<div>
+				<lightning-combobox name="destinatarioPresupuesto"
+            						label="Destinatario del presupuesto"
+            						value={selectedDestinatarioPresupuesto}
+            						options={destinatarioPresupuestoList}
+            						onchange={handleDestinatarioPresupuesto} >
+				</lightning-combobox>
+				<br/>
+
+				<!-- Que valor entra neste combobox:
+				 		- WorkOrder.TECH_TVA__c
+						- ServiceContract.Tax__c
+						- Quote.VAT__c
+				 -->
+				<lightning-combobox name="tasaAplicable"
+            						label="Tasa aplicable a todos los productos"
+            						value={value}
+            						options={options}
+            						onchange={handleTasaAplicable} >
+				</lightning-combobox>
+				<br/>
+			</div>
+
+			<!-- Add Services -->
+			<div>
+				<p class="subTitle">Servicios principales</p>
+
+				<!-- List of Added Services -->
+				<div if:true={itemInCart} role="listbox">
+					<ul class="slds-listbox slds-listbox_vertical slds-p-top_small" role="presentation">
+						<template for:each={selectedPricebookItemsList} for:item="product">
+							<li key={product.value} 
+								data-value={product.value} 
+								role="presentation"
+								onclick={selectSearchResult}
+								class="searchItemContainer slds-listbox__item slds-m-bottom_medium">
+								<lightning-layout horizontal-align="spread" class="lightning-layout" >
+									<!-- Name and Reference -->
+									<lightning-layout-item>
+										<div class="slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
+											<span title={product.label}>{product.label}</span>
+											<span style="display: block;" class="slds-truncate grayTitle" title={product.reference}>Ref: {product.reference}</span>
+										</div>
+									</lightning-layout-item>
+									<!-- Quantity, Discount and Price -->
+									<lightning-layout-item>
+										<div class="slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
+											<div style="text-align: end;">
+												<span  class="slds-truncate">Quantity ____ </span>
+												<span style="display: block;" class="slds-truncate grayTitle" title="Precio unitario">incl. IVA</span>
+												<span style="display: block;" class="slds-truncate" title={product.unitPrice}>{product.unitPrice}€</span>
+												<span  class="slds-truncate">Descuento ____ </span>
+											</div>
+										</div>
+									</lightning-layout-item>
+								</lightning-layout>
+							</li>
+						</template>
+					</ul>
+				</div>
+
+
+
+
+
+
+
+
+				<lightning-icon class="add-icon slds-p-right_small"
+							size="small"
+							icon-name="utility:new" 
+							alternative-text="Add" 
+							title="Add"
+							onclick={handlerAddServices}>
+				</lightning-icon>
+				<span class="grayTitle">Agregar</span>
+			</div>
+			<br/>
+
+			<!-- Work Ended and Duration of Work -->
+			<div>
+				<lightning-input 
+								type="date" 
+							 	name="input2" 
+							 	label="Fecha provisional para el inicio del trabajo" 
+							 	value="2020-09-07">
+				</lightning-input>
+				<br/>
+				<lightning-input class="input-no-border"
+							 ype="number" 
+							 name="workDuration" 
+							 value="123" 
+							 label="Duración del trabajo (tiempo)" 
+							 readonly >
+				</lightning-input>
+				<br/>
+				<lightning-input type="checkbox" 
+								 name="PiezasIncluidasContrato"
+								 label="Piezas incluidas en el contrato">
+								 <!--checked 
+								 disabled-->
+				</lightning-input>
+			</div>
+			<br/>
+
+			<!-- Coment -->
+			<div>
+			<lightning-textarea name="Coment" 
+								label="Comentario - Opcional" 
+								placeholder="Ej: Cliente ausente. Puerta de la vivenda dejada abierta a petición...">
+			</lightning-textarea>
+			</div>
+			
+			<!-- Footer Buttons -->
+			<div class="footer-container slds-m-top_xx-large slds-text-align_center">
+				<div class="buttons slds-p-top_small">
+					<lightning-button label="Registrar" 
+								title="Registrar" 
+								variant="brand"
+								onclick={handleRegistrar} 
+								class="buttons registrar-button">
+					</lightning-button>
+				</div>
+				<div class="buttons slds-p-top_small">
+					<lightning-button label="Rechazar" 
+								title="Rechazar" 
+								variant="brand"
+								onclick={handleRechazar} 
+								class="buttons">
+								<!-- disabled-->
+					</lightning-button>
+				</div>
+				
+				<div class="buttons slds-p-top_small">
+					<lightning-button label="Firma del cliente" 
+								title="FirmaDelCliente" 
+								variant="brand"
+								onclick={handleFirma} 
+								class="buttons firma-button">
+				</lightning-button>
+				</div>
+				
+			</div>
+			
+		
+		</div>
+	</div>
+</template>
+
+
+
+
+
+
+
+
+
+
+<!-- <div class="popin-container">
+	<div class="popin">
+	<div class="div-title">
+		<h1>Declarando un nuevo equipo</h1>
+	</div>
+
+	<div class="concerned-equipement-container">
+
+		<div class="labeledItem">
+		<label class="label-1" for="MainEquipment">Equipo principal</label>
+		<lightning-combobox name="mainEquipment" value={selectedMainEquipment} placeholder="Elige una opción"
+			options={mainEquipmentPicklistOptions} onchange={onMainEquipmentChange} class="select-input" data-id="MainEquipment">
+		</lightning-combobox>
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-1" for="EquipementType">Tipo de equipo</label>
+		<lightning-combobox name="techType" value={selectedDevisType} placeholder="Elige una opción"
+			options={devisTypePicklistOptions} onchange={onDevisTypeChange} class="select-input" data-id="EquipementType">
+		</lightning-combobox>
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-1" for="EquipementSubType">Subtipo de equipo</label>
+		<lightning-combobox name="techType" value={selectedDevisType} placeholder="Elige una opción"
+			options={devisTypePicklistOptions} onchange={onDevisTypeChange} class="select-input" data-id="EquipementSubType">
+		</lightning-combobox>
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-1" for="Brand">Marca</label>
+		<lightning-combobox name="techType" value={selectedDevisType} placeholder="Elige una opción"
+			options={devisTypePicklistOptions} onchange={onDevisTypeChange} class="select-input" data-id="Brand">
+		</lightning-combobox>
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-1" for="Model">Modelo</label>
+		<lightning-combobox name="techType" value={selectedDevisType} placeholder="Elige una opción"
+			options={devisTypePicklistOptions} onchange={onDevisTypeChange} class="select-input" data-id="Model">
+		</lightning-combobox>
+		</div>
+
+
+		<div class="labeledItem">
+		<label class="label-2">Número de serie</label>
+		<input class="devis-subject" type="text" />
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-2">Fecha de fabricación</label>
+		<input class="devis-subject" type="text" />
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-2">Fecha de instalación</label>
+		<input class="devis-subject" type="text" />
+		</div>
+
+		<div class="labeledItem">
+		<label class="label-2">Fecha de puesta en marcha</label>
+		<input class="devis-subject" type="text" />
+		</div>
+	</div>
+
+	<div class="footer-buttons-wrapper">
+		<button class="cancel-button-container" onclick={close}>
+		Cancelar
+		</button>
+
+		<button class="register-button-container" onclick={switchTemplate}>
+		Registrar
+		</button>
+	</div>
+	</div>
+</div> -->
