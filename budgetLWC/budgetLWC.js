@@ -1,16 +1,20 @@
 import { api, LightningElement, wire, track } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
+import userId from '@salesforce/user/Id';
 import templateOne from "./templateOne.html";
 import templateTwo from "./templateTwo.html";
 import templateThree from "./templateThree.html";
+import templateFour from "./templateFour.html";
 import templatePieceDetails from "./templatePieceDetails.html";
 import getBudgectInformation from '@salesforce/apex/TES_BudgetController.getBudgectInformation';
 import getProductInformation from '@salesforce/apex/TES_BudgetController.getPricebookItems';
+import createOpportunity from '@salesforce/apex/TES_BudgetController.createOpportunity';
 
 //fields
 import WORK_STEP_ID_FIELD from '@salesforce/schema/WorkStep.Id';
 import IMAGEN from '@salesforce/resourceUrl/imageDoc';
 import getPricebookItems from '@salesforce/apex/TES_BudgetController.getPricebookItems';
+//import Pricebook2 from '@salesforce/schema/Contract.Pricebook2';
 
 // import SERVICE_APPOINTMENT_ID_FIELD from '@salesforce/schema/ServiceAppointment.Id';
 // import SERVICE_APPOINTMENT_RESIDENCE_FIELD from '@salesforce/schema/ServiceAppointment.Residence__c';
@@ -27,14 +31,23 @@ import getPricebookItems from '@salesforce/apex/TES_BudgetController.getPriceboo
 
 export default class BudgetLWC extends LightningElement {
 
+	currentUserId = userId;
 	showTemplateOne = true;
-	showTemplateTwo = true;
-	showTemplateThree = true;
+	showTemplateTwo = false;
+	showTemplateThree = false;
+	showTemplateFour = false;
 	showPieceDetailsScreen = false;
+	showConfirmScreen = false;
+	showConfirmedOpportunityScreen = false;
 	devisTypePicklistOptions = [];
 	@track openSpinner = false;
 	itemInCart = false;
 	isValueWithDiscount = false;
+	lockBudgetTitle = true;
+	lockDevisType = true;
+	lockAssets = true;
+	lockCreatedButton = false;
+	lockDeclineButton = true;
 
 	@track
 	mainEquipmentPicklistOptions = [];
@@ -43,6 +56,18 @@ export default class BudgetLWC extends LightningElement {
 	percentageIVA = 0.21;
 	pieceDetailDiscount = 0;
 	pieceDetailTotalPrice;
+	servicesTotalValue = 0;
+	stringServiceAppDuration;
+	provisionalEndDate;
+	opp2Create;
+	oppLineItems2Create = [];
+	workStepObj;
+	comments;
+	newOpportunity;
+	dateFormate2Apex;
+	totalPrincipalServices_WITH_IVA = 0;
+	totalPrincipalServices_WITHOUT_IVA = 0;
+	totalPrincipal_IVA = 0;
 
 	imageUrl = IMAGEN;
 	error;
@@ -56,15 +81,18 @@ export default class BudgetLWC extends LightningElement {
 	selectedDevisType;
 	selectedRadioEquipments = [];
 
-	destinatarioPresupuestoList = []
-	selectedDestinatarioPresupuesto
-
-	@track pricebookItemsList = []
-	@track selectedPricebookItemsList = []
+	destinatarioPresupuestoList = [];
+	selectedDestinatarioPresupuesto;
+	
+	@track confimedProductsList = [];
+	@track pricebookItemsList = [];
+	@track selectedPricebookItemsList = [];
 	@track selectedIndividualPricebookItem;
 	@track productsVisible = false;
+	@track selectedProductListLength = 0;
 	showMainAddProduct = false;
 	showShoppingCartScreen = false;
+	pricebookId;
 	
 
 	@track totalSelectedPiece = 1;
@@ -94,24 +122,33 @@ export default class BudgetLWC extends LightningElement {
 		await this.getBudgectInformationWrapper();
 	}
 
-	render() {
-		console.log('render');
-		switch (true) {
-			case this.showTemplateOne:
-				console.log('showTemplateOne');
-				return templateOne;
-			case this.showTemplateTwo:
-				console.log('showTemplateTwo');
-				return templateTwo;
-			case this.showTemplateThree:
-				console.log('showTemplateThree');
-				this.openSpinner = false;
-				return templateThree;
-			// case this.showPieceDetailsScreen:
-			// 	console.log('templatePieceDetails');
-			// 	return templatePieceDetails;
+	render() {	
+		if (this.showPieceDetailsScreen) {
+			return templatePieceDetails;
+		} else if (this.showTemplateFour){
+			return templateFour;
+		} else if (this.showTemplateThree) {
+			return templateThree;
+		} else if (this.showTemplateTwo) {
+			return templateTwo;
+		} else {
+			return templateOne;
 		}
 	}
+
+	calculateProvisionalDate(){
+		let today = new Date();
+        let nextMonth = new Date(today.setMonth(today.getMonth() + 1));
+
+		let year = nextMonth.getFullYear();
+        let month = String(nextMonth.getMonth() + 1).padStart(2, '0');
+        let day = String(nextMonth.getDate()).padStart(2, '0');
+
+		this.dateFormate2Apex = `${day}/${month}/${year}`
+
+		return `${year}-${month}-${day}`;
+	}
+	
 
 	async getBudgectInformationWrapper(){
 		await getBudgectInformation({
@@ -121,9 +158,18 @@ export default class BudgetLWC extends LightningElement {
 			console.log('DATA FROM WRAPPER');
 			console.log(JSON.stringify(data));
 
+			// Get Work Order
+			if( data.workStepObj ){
+				this.workStepObj = data.workStepObj;
+				console.log('workStepObj', JSON.stringify(this.workStepObj));
+			}
+			
 			// Get Service Appointment information
 			if( data.serviceAppointmentObj ){
 				this.serviceAppointment = data.serviceAppointmentObj;
+
+				this.stringServiceAppDuration = String(this.serviceAppointment.Duration + ' ' + this.serviceAppointment.DurationType);
+				this.provisionalEndDate = this.calculateProvisionalDate();
 			}
 
 			// Get Assets information
@@ -153,6 +199,8 @@ export default class BudgetLWC extends LightningElement {
 					this.destinatarioPresupuestoList.push({
 						value: data.serviceAppointmentObj.Residence__r.Owner__c,
 						label: data.serviceAppointmentObj.Residence__r.Owner__r.Name,
+						phone: data.serviceAppointmentObj.Residence__r.Owner__r.Phone,
+						address: data.serviceAppointmentObj.Residence__r.Owner__r.BillingAddress
 					})
 				}
 			} 
@@ -162,6 +210,8 @@ export default class BudgetLWC extends LightningElement {
 					this.destinatarioPresupuestoList.push({
 						value: data.serviceAppointmentObj.Residence__r.Inhabitant__c,
 						label: data.serviceAppointmentObj.Residence__r.Inhabitant__r.Name,
+						phone: data.serviceAppointmentObj.Residence__r.Inhabitant__r.Phone,
+						address: data.serviceAppointmentObj.Residence__r.Inhabitant__r.BillingAddress
 					})
 				}
 			}
@@ -196,7 +246,6 @@ export default class BudgetLWC extends LightningElement {
 			if(this.assets[key].value == event.target.value){
 				this.selectedRadioEquipments = this.assets[key];
 			}
-			
 		}
 		
 		this.checkRequiredFileds();
@@ -220,8 +269,11 @@ export default class BudgetLWC extends LightningElement {
 	}
 
 	handleCreateBudget() {
-		// this.mainEquipmentPicklist();
-		this.showTemplateOne = !this.showTemplateOne;
+		console.log('Navigating to templateTwo');
+	
+		this.showTemplateOne = false;
+		this.showTemplateTwo = true;
+		this.showTemplateThree = false;
 	}
 
 	checkRequiredFileds(){
@@ -234,40 +286,152 @@ export default class BudgetLWC extends LightningElement {
 		}
 	}
 
-	handlerAddServices(){
-		console.log('Clicked Add Services');
-		
+	handlerAddServices() {
+		console.log('Navigating to templateThree');
+	
 		this.showTemplateOne = false;
 		this.showTemplateTwo = false;
 		this.showTemplateThree = true;
-
-		
 	}
 
-	handleBackButton(){
-		this.openSpinner = true;
-
-		if(this.showTemplateTwo){
-			this.showTemplateOne = true;
-			this.showTemplateTwo = false;
-		}else if(this.showTemplateThree){
+	handleBackButton() {
+		console.log('Handling Back Button');
+	
+		if (this.showPieceDetailsScreen) {
+			console.log('Closing Piece Details Screen');
+			this.showPieceDetailsScreen = false;
+			this.showTemplateThree = true;
+		} else if (this.showTemplateThree) {
+			console.log('Going back to templateTwo');
 			this.showTemplateOne = false;
 			this.showTemplateTwo = true;
 			this.showTemplateThree = false;
+		} else if (this.showTemplateTwo) {
+			console.log('Going back to templateOne');
+			this.showTemplateOne = true;
+			this.showTemplateTwo = false;
+			this.showTemplateThree = false;
 		}
-		// else if(this.showPieceDetailsScreen){
-		// 	this.showTemplateOne = false;
-		// 	this.showTemplateTwo = false;
-		// 	this.showTemplateThree = true;
-		// }
-		
-		
+	}
+	
 
+	//Template 2
+	handleDestinatarioPresupuesto(event){
+		console.log('account ',event.detail.value);
+		this.selectedDestinatarioPresupuesto = this.destinatarioPresupuestoList.find(item => item.value === event.detail.value);
 
 	}
 
-	//Template 2
-	handleDestinatarioPresupuesto(){
+	changeInput(event){
+		let id = event.target.dataset.id;
+
+		switch(id) {
+			case 'title':
+				console.log('Budget Title button clicked');
+				!this.lockBudgetTitle ? this.lockBudgetTitle = true : this.lockBudgetTitle = false
+				break;
+
+			case 'devisType':
+				console.log('Selected Devis Type button clicked');
+				!this.lockDevisType ? this.lockDevisType = true : this.lockDevisType = false
+				break;
+
+			case 'TypeQuote':
+				console.log('Selected Radio Equipments button clicked');
+				!this.lockAssets ? this.lockAssets = true : this.lockAssets = false
+				break;
+
+			default:
+				console.log('Unknown button clicked');
+		}
+	}
+
+	changeInputBudgetTitle(event){
+		this.budgetTitle = event.target.value;
+	}
+
+	changeOnDevisTypeInput(event){
+		this.selectedDevisType = event.detail.value;
+	}
+
+	changeAssetsInput(event){
+		for(let key in this.assets){
+			if(this.assets[key].value == event.target.value){
+				this.selectedRadioEquipments = this.assets[key];
+			}
+		}
+	}
+
+	handleCommentsChange(event){
+		this.comments = event.target.value;
+	}
+
+	// Uncomment all lines
+	async handleRegistrar(){
+		this.showConfirmedOpportunityScreen = true;
+		// this.lockDeclineButton = true;
+		// this.lockCreatedButton = true;
+	
+		// if(!this.opp2Create){
+		// 	this.opp2Create = {
+		// 		Name: this.budgetTitle, 
+		// 		AccountId: this.selectedDestinatarioPresupuesto, 
+		// 		ContactId: this.workStepObj.WorkOrder.ContactId,
+		// 		Ordre_d_execution__c: this.workStepObj.WorkOrderId, 
+		// 		Agency__c: this.serviceAppointment.ServiceTerritoryId, 
+		// 		CloseDate: this.dateFormate2Apex, // only accepts dd/mm/yyy format
+		// 		StageName: 'Proposal',
+		// 		RecordTypeId: '01209000000mc8AAAQ',
+		// 		CurrencyIsoCode: this.confimedProductsList[0].currencyIsoCode, 
+		// 		Commentaires__c: this.comments,
+		// 		OwnerId: this.currentUserId, 
+		// 		Pricebook2Id: this.serviceAppointment.TES_Pricebook2Id__c,
+		// 		TECH_Type_de_devis__c: this.selectedDevisType, 
+		// 		VAT_rate__c: this.percentageIVA * 100
+		// 	}
+		// 	console.log('handleRegistrar');
+		// 	for(let key in this.confimedProductsList){
+		// 		console.log(JSON.stringify(this.confimedProductsList[key]));
+		// 		this.oppLineItems2Create.push({
+		// 			Quantity: this.confimedProductsList[key].quantity,
+		// 			UnitPrice: this.confimedProductsList[key].unitPrice,
+		// 			Discount: this.confimedProductsList[key].discount,
+		// 			TECH_Garantie_CHAM__c: this.confimedProductsList[key].warantyEnterprise,
+		// 			TECH_Garantie_Fournisseur__c: this.confimedProductsList[key].warantyFactory,
+		// 			Product2Id: this.confimedProductsList[key].productId,
+		// 			UnitPrice: this.confimedProductsList[key].unitPrice,
+		// 			TotalPrice: this.confimedProductsList[key].newTotalPrice
+		// 		});
+		// 	}
+		// 	console.log('oppLineItems2Create: ', JSON.stringify(this.oppLineItems2Create));
+
+		// 	// Apex call to create Opportunity
+		// 	await createOpportunity({
+		// 		opportunityData: JSON.stringify(this.opp2Create),
+		// 		productData: JSON.stringify(this.oppLineItems2Create),
+		// 	}).then(data => {
+		// 		if(data != ''){
+		// 			this.lockCreatedButton = true;
+		// 			console.log('Complete Oppt')
+		// 		}else{
+		// 			this.lockCreatedButton = false;
+		// 			console.log('Error Oppt')
+		// 		}
+
+		// 		if(this.opp2Create){
+		// 			this.lockDeclineButton = false;
+		// 		}
+		// 	});
+			
+		// }
+		
+		
+		
+		
+	}
+
+	handleDecline(){
+		//Erease all array and return to 1st page
 
 	}
 
@@ -277,13 +441,19 @@ export default class BudgetLWC extends LightningElement {
 		this.openSpinner = true;
 		console.log('SEARCH');
 		console.log('serviceAppointment: ' + JSON.stringify(this.serviceAppointment));
+
+		let discount;
+		let warantyFactory;
+		let warantyEnterprise;
+		let prli;
+		
 		
 		event.preventDefault();
 		let input = event.target.value;
 		console.log('----> INPUT: ' + input);
 
 		this.pricebookItemsList = [];
-		if(input.length > 4){
+		if(input.length > 2){
 			
 			this.showMainAddProduct = true;
 
@@ -297,22 +467,68 @@ export default class BudgetLWC extends LightningElement {
 			
 
 			for (let key in data){
+				//console.log('DATA');
+				//console.log(JSON.stringify(data));
 				if(!this.pricebookItemsList.includes(data[key].Id)){
-					console.log('--------- DENTRO IF -------')
+					
+					// Calculate PRLI
+					if(data[key].Product2.RecordType.DeveloperName === 'Article' &&
+						(data[key].Product2.Famille_d_articles__c === 'Accessoires' ||
+						data[key].Product2.Famille_d_articles__c === 'Equipements' ||
+						data[key].Product2.Famille_d_articles__c === 'Pièces détachées' ||
+						data[key].Product2.Famille_d_articles__c === 'Consommables')
+					){
+						prli = 1;
+					}else{
+						prli = 0;
+					}
+
+					// Check Warranty and Discount Of Product
+					if(data[key].TES_Quote_Coverage_Type__c == "Covered By Warranty" || "Covered By Company Full"){
+						discount = 100;
+						warantyFactory = false;
+		 				warantyEnterprise = true;
+					}else if(data[key].TES_Quote_Coverage_Type__c == "Covered By Company Full"){
+						discount = 100;
+						warantyFactory = false;
+		 				warantyEnterprise = true;
+					}else if(prli == 1){
+						discount = 100;
+						warantyFactory = false;
+		 				warantyEnterprise = true;
+					}else if(prli == 0){
+						discount = 100;
+						warantyFactory = false;
+		 				warantyEnterprise = true;
+					}else if(data[key].TES_Quote_Coverage_Type__c == "Article Discount"){
+						discount = data[key].Product2.TES_Article_Discount__c;
+						warantyFactory = false;
+		 				warantyEnterprise = false;
+					}else{
+						discount = 0;
+						warantyFactory = false;
+		 				warantyEnterprise = false;
+					}
+
+
+
 					this.pricebookItemsList.push({
 						value: data[key].Id,
 						label: data[key].Product2.Name,
 						reference: data[key].ProductCode,
 						unitPrice: data[key].UnitPrice,
 						quantity: 0,
-						warantyFactory: true,
-						warantyEnterprise: true,
-						discount: this.pieceDetailDiscount,
-						newTotalPrice: data[key].UnitPrice
+						warantyFactory: warantyFactory,
+						warantyEnterprise: warantyEnterprise,
+						discount: discount,
+						newTotalPrice: data[key].UnitPrice,
+						currencyIsoCode: data[key].CurrencyIsoCode,
+						productId: data[key].Product2Id
 					});
 				}
 			}
 			console.log('----> this.pricebookItemsList.length: ' + this.pricebookItemsList.length);
+			//console.log('----> this.pricebookItemsList.: ', JSON.stringify(this.pricebookItemsList));
 			this.pricebookItemsList.length > 0 ? this.productsVisible = true : this.productsVisible = false;
 			
 
@@ -325,63 +541,57 @@ export default class BudgetLWC extends LightningElement {
 		}
 	}
 	
-	handlerAddProduct(event){
-		//console.log('MAIN ADD');
-		//console.log('Event:', event);
-		//this.showMainAddProduct = false;
-		//this.pricebookItemsList
+	handlerAddProduct(event) {
+		console.log('MAIN ADD');
+		console.log('Event:', event);
+		let newTotalValueWithDiscount;
 	
 		let productId = event.currentTarget.dataset.productId;
-		//console.log('Selected Product ID:', JSON.stringify(productId));
+		console.log('Selected Product ID:', JSON.stringify(productId));
 	
-		this.selectedPricebookItemsList.push(this.pricebookItemsList.find(item => item.value === productId));
+		//this.selectedPricebookItemsList.push(this.pricebookItemsList.find(item => item.value === productId));
 		this.selectedIndividualPricebookItem = this.pricebookItemsList.find(item => item.value === productId);
 	
 		// Calculate price with VAT initially
 		let priceWithVAT = this.selectedIndividualPricebookItem.unitPrice * (1 + this.percentageIVA);
 		console.log('Initial price with VAT:', priceWithVAT);
-		
+
+		if(this.selectedIndividualPricebookItem.discount > 0){
+			newTotalValueWithDiscount = priceWithVAT - (priceWithVAT * (this.selectedIndividualPricebookItem.discount / 100));
+		}
+	
 		this.selectedIndividualPricebookItem = {
 			...this.selectedIndividualPricebookItem,
 			quantity: this.totalSelectedPiece,
-			newTotalPrice: priceWithVAT.toFixed(2)
-		}
+			newTotalPrice: newTotalValueWithDiscount == null ? priceWithVAT.toFixed(2) : newTotalValueWithDiscount
+		};
 	
-		//console.log(JSON.stringify(this.selectedPricebookItemsList));
+		console.log('Updated selected product:', JSON.stringify(this.selectedIndividualPricebookItem));
 	
-		if(this.selectedPricebookItemsList.length > 0){
-			this.itemInCart = true;
-			this.pieceDetailTotalPrice = priceWithVAT;
-			//this.showShoppingCartScreen = true;
-		}
-	
-		//--- OPEN PIECE DETAILS SCREEN
-		this.showPieceDetailsScreen = true;
-		
-		// if(this.showPieceDetailsScreen){
-		// 	this.showTemplateOne = false;
-		// 	this.showTemplateTwo = false;
-		// 	this.showTemplateThree = false;
+		// if (this.selectedPricebookItemsList.length > 0) {
+		// 	this.itemInCart = true;
+		// 	this.pieceDetailTotalPrice = priceWithVAT;
 		// }
+	
 
-
-		console.log('this.selectedPricebookItemsList');
-		console.log(JSON.stringify(this.selectedPricebookItemsList));
-
-
-
+		this.showPieceDetailsScreen = true;
+		this.showTemplateThree = false;
+	
+		console.log('this.selectedPricebookItemsList', JSON.stringify(this.selectedPricebookItemsList));
 	}
 
 
 
-	// toggleOverlay() {
-    //     const overlay = this.template.querySelector('.shoppingCartContainer');
-    //     overlay.classList.toggle('active');
 
+
+	toggleOverlay() {
+		console.log("Toggling shopping cart...");
+		const container = this.template.querySelector('.shoppingCartContainer');
+		if (container) {
+			container.classList.toggle('active');
+		}
+	}
 	
-
-    //     this.showPieceDetailsScreen = !this.showPieceDetailsScreen;
-    // }
 
 	
 	// Template Piece Details
@@ -410,6 +620,11 @@ export default class BudgetLWC extends LightningElement {
 		console.log('Updated product after quantity change:', JSON.stringify(this.selectedIndividualPricebookItem));
 		
 		this.updateProduct(this.selectedIndividualPricebookItem);
+	}
+
+	handleChangeQuantityOfProduct(event){
+		this.totalSelectedPiece = parseInt(event.target.value,10);
+		this.updatePriceWithVATAndDiscount();
 	}
 	
 	increment() {
@@ -506,6 +721,11 @@ export default class BudgetLWC extends LightningElement {
 
 
 	updateProduct(updatedProduct) {
+		console.log('------------------');
+		console.log('updatedProduct: ', JSON.stringify(updatedProduct));
+
+
+
 		let index = this.selectedPricebookItemsList.findIndex(product => product.value === updatedProduct.value);
 
 		if (index !== -1) {
@@ -513,34 +733,149 @@ export default class BudgetLWC extends LightningElement {
 				...this.selectedPricebookItemsList[index], 
 				...updatedProduct 
 			};
+
 		} else {
 			console.log('Product not found');
+			this.selectedPricebookItemsList.push(this.selectedIndividualPricebookItem);
 		}
+
+		this.selectedProductListLength = this.selectedPricebookItemsList.length;
+		console.log('------------------');
+		console.log('updatedProduct: ', JSON.stringify(this.selectedPricebookItemsList));
+
+		// if (this.selectedPricebookItemsList.length > 0) {
+		// 	this.itemInCart = true;
+		// 	this.pieceDetailTotalPrice = priceWithVAT;
+		// }
 		console.log(JSON.stringify(this.selectedPricebookItemsList));
 	}
 	
 	handlerCancelChanges(){
 		console.log('<--------- CANCEL CHANGES');
-		//this.selectedPricebookItemsList = this.selectedPricebookItemsList.filter( item => item.id !== this.selectedIndividualPricebookItem.value );
+		this.selectedPricebookItemsList = this.selectedPricebookItemsList.filter( item => item.value !== this.selectedIndividualPricebookItem.value );
 
 		this.showPieceDetailsScreen = false;
+		this.selectedProductListLength = this.selectedPricebookItemsList.length;
 		
-		// if(!this.showPieceDetailsScreen){
-		// 	this.showTemplateOne = false;
-		// 	this.showTemplateTwo = false;
-		// 	this.showTemplateThree = true;
-		// }
+		if(!this.showPieceDetailsScreen){
+			this.showTemplateOne = false;
+			this.showTemplateTwo = false;
+			this.showTemplateThree = true;
+		}
 
-		console.log('this.selectedPricebookItemsList');
+		console.log('----> NEW : this.selectedPricebookItemsList');
 		console.log(JSON.stringify(this.selectedPricebookItemsList));
 	}
 
 
 
 	handlerConfirmChanges(){
-		console.log('---------> CONTINUE WITH CHANGES');
+		this.updateProduct(this.selectedIndividualPricebookItem);
+
+		this.showPieceDetailsScreen = false;
+		
+		if(!this.showPieceDetailsScreen){
+			this.showTemplateOne = false;
+			this.showTemplateTwo = false;
+			this.showTemplateThree = true;
+		}
+
+		console.log('this.selectedPricebookItemsList', JSON.stringify(this.selectedPricebookItemsList));
 	}
 
+	connectedCallback() {
+		document.body.classList.add('modal-open');
+	}
+	
+	disconnectedCallback() {
+		document.body.classList.remove('modal-open');
+	}
+
+	toggleOverlay() {
+		const container = this.template.querySelector('.shoppingCartContainer');
+		container.classList.toggle('active');
+	}
+
+	handlerRemoveAllItems(){
+		this.selectedPricebookItemsList = [];
+		this.selectedIndividualPricebookItem = null;
+		this.selectedProductListLength = 0;
+	}
+
+	handlerConfirmAllItems(){
+		this.showConfirmScreen = true;
+	}
+
+	handlerCancelConfScreen(){
+		this.showConfirmScreen = false;
+	}
+
+	handlerBackToBudget(){
+		this.showConfirmedOpportunityScreen = false;
+	}
+
+
+	handlerTerminateScreen(){
+		this.showTemplateTwo = false;
+		this.showTemplateFour = true;
+
+		console.log('selected Destinatario Presupuesto', JSON.stringify(this.selectedDestinatarioPresupuesto));
+		//console.log('destinatario Presupuesto List', JSON.stringify(this.destinatarioPresupuestoList));
+
+		this.selectedDestinatarioPresupuesto = this.destinatarioPresupuestoList.find(item => item.value === this.selectedDestinatarioPresupuesto);
+
+		console.log('selected Destinatario Presupuesto', JSON.stringify(this.selectedDestinatarioPresupuesto));
+
+
+		for(let key in this.confimedProductsList){
+			console.log('confimedProductsList', JSON.stringify(this.confimedProductsList[key]));
+			this.totalPrincipalServices_WITHOUT_IVA += (Number(this.confimedProductsList[key].unitPrice) * Number(this.confimedProductsList[key].quantity));
+			this.totalPrincipalServices_WITHOUT_IVA;
+
+			this.totalPrincipalServices_WITH_IVA += (Number(this.confimedProductsList[key].newTotalPrice));
+			this.totalPrincipalServices_WITH_IVA;
+		}
+		this.totalPrincipal_IVA = this.totalPrincipalServices_WITH_IVA / this.percentageIVA;
+
+	}
+
+	handleTerms(){
+
+	}
+
+	handlerConfirmScreen(){
+		this.confimedProductsList = this.selectedPricebookItemsList;
+		console.log('confimedProductsList');
+		console.log(this.confimedProductsList);
+		this.selectedPricebookItemsList = [];
+		this.selectedIndividualPricebookItem = null;
+		this.selectedProductListLength = 0;
+		this.showConfirmScreen = !this.showConfirmScreen
+
+		if (this.confimedProductsList.length > 0) {
+			this.itemInCart = true;
+			this.lockCreatedButton = false;
+			//this.pieceDetailTotalPrice = priceWithVAT;
+			for(let key in this.confimedProductsList){
+				console.log('key', key);
+				console.log('confimedProductsList', JSON.stringify(this.confimedProductsList[key]));
+				this.servicesTotalValue += Number(this.confimedProductsList[key].newTotalPrice);
+			}
+		}
+
+		if(!this.showPieceDetailsScreen){
+			this.showTemplateOne = false;
+			this.showTemplateTwo = true;
+			this.showTemplateThree = false;
+		}
+
+		
+	}
+
+	get cartContainerClass() {
+		return this.showShoppingCartScreen ? "shoppingCartContainer active" : "shoppingCartContainer";
+	}
+	
 
 														// @wire(getRecord, { recordId: '0hFQI0000000Tut2AE', fields: [WORK_ORDER_ID_FIELD] })
 														// workOrderId;

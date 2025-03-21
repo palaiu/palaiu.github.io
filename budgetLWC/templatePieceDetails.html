@@ -40,7 +40,12 @@
 									onclick={decrement}>
 					</lightning-icon>
 					<div class="dash"></div>
-					<span class="totalSelectedPiece slds-p-horizontal_small">{totalSelectedPiece}</span>
+					<lightning-input class="totalSelectedPiece" 
+										 type="number" 
+										 name="Quantity"
+										 value={totalSelectedPiece}
+										 onchange={handleChangeQuantityOfProduct}>
+						</lightning-input>
 					<div class="dash"></div>
 					<lightning-icon class="slds-p-left_small" style="cursor: pointer;"
 									icon-name="utility:add"  
@@ -76,7 +81,7 @@
 				
 					<!-- Discount  -->
 					<div class="slds-p-vertical_small" style="display: flex; align-items: end; width: 5rem;">
-						<lightning-input type="number" value={pieceDetailDiscount} label="Descuento" onchange={handleDiscount}></lightning-input>
+						<lightning-input type="number" value={selectedIndividualPricebookItem.discount} label="Descuento" onchange={handleDiscount}></lightning-input>
 						<span style="font-size:1rem" class="slds-p-left_small">%</span>
 					</div>
 
@@ -99,13 +104,15 @@
 				</div>
 
 				<!-- Buttons  -->
-				<div style="display: grid; width: 15rem; margin: 0 auto;">
-					<div style="margin: 0 auto" class="slds-p-bottom_xx-small">
-						<button class="button-actionCancel" onclick={handlerCancelChanges}>Eliminar Partida</button>
-					</div>
+				<div class="button-container">
+					<div style="display: grid; width: 15rem; margin: 0 auto;">
+						<div style="margin: 0 auto" class="slds-p-bottom_xx-small">
+							<button class="button-actionCancel" onclick={handlerCancelChanges}>Eliminar Partida</button>
+						</div>
 
-					<div style="display: grid; width: 15rem;" class="slds-p-top_xx-small">
-						<button class="button-actionContinue" onclick={handlerConfirmChanges}>Añadir al Presupuesto</button>
+						<div style="display: grid; width: 15rem;" class="slds-p-top_xx-small">
+							<button class="button-actionContinue" onclick={handlerConfirmChanges}>Añadir al Presupuesto</button>
+						</div>
 					</div>
 				</div>
 			</div>

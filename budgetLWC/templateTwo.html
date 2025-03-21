@@ -20,19 +20,51 @@
 			<!-- Total Price -->
 			<div>
 				<p class="grayTitle">Total (incl. IVA)</p>
-				<span class="totalPrice">0</span>
+				<span class="totalPrice">{servicesTotalValue}</span>
 				<span class="slds-text-title_bold">€</span>
 			</div>
 
 			<!-- Title and services / equipments -->
-			<div class="slds-p-vertical_medium">
-				<span class="slds-text-title_bold">{budgetTitle}</span>
-				<br/>
-				<span class="slds-text-title_bold">{selectedDevisType}</span>
-				<br/>
-				<span class="slds-text-title_bold">---------</span>
-				<br/>
-				<span class="slds-text-title_bold">{selectedRadioEquipments.label}</span>	
+			<div class="slds-p-vertical_large">
+				<div class="titleAndServices">
+					<lightning-input class="slds-p-right_large" type="text" label="Objeto del presupuesto" value={budgetTitle} disabled={lockBudgetTitle} onchange={changeInputBudgetTitle}></lightning-input>
+					<span style="text-align: end;" class="changeInfo" data-id="title" onclick={changeInput}>Cambiar</span>
+				</div>
+				<div class="titleAndServices slds-p-bottom_small">
+					<lightning-combobox class="slds-p-right_large"
+							label="Tipo de presupuesto"
+							value={selectedDevisType}
+							placeholder="Select Progress"
+							options={devisTypePicklistOptions}
+							onchange={changeOnDevisTypeInput}
+							disabled={lockDevisType}>
+					</lightning-combobox>
+					<span style="text-align: end;" class="changeInfo" data-id="devisType" onclick={changeInput}>Cambiar</span>
+				</div>
+				<div class="titleAndServices">
+					<div if:true={lockAssets}>
+						<lightning-input class="slds-p-right_large" type="text" label="Equipos relacionados" value={selectedRadioEquipments.label} disabled></lightning-input>
+					</div>
+					<div if:false={lockAssets}>
+						<lightning-radio-group class="slds-p-top_medium"
+								name="equipmentsGroup"
+								label="Equipos relacionados"
+								options={assets}
+								value={Name}
+								onchange={changeAssetsInput}
+								type="radio">
+						</lightning-radio-group>
+					</div>
+					<span style="text-align: end;" class="changeInfo" data-id="TypeQuote" onclick={changeInput}>Cambiar</span>
+				</div>
+				<div class="titleAndServices">
+					<lightning-input class="slds-p-right_large" type="text" value="Presupuesto estándar" disabled></lightning-input>
+				</div>
+				
+
+				
+
+			
 			</div>
 
 			<!-- Combo boxs -->
@@ -50,12 +82,12 @@
 						- ServiceContract.Tax__c
 						- Quote.VAT__c
 				 -->
-				<lightning-combobox name="tasaAplicable"
-            						label="Tasa aplicable a todos los productos"
-            						value={value}
-            						options={options}
-            						onchange={handleTasaAplicable} >
-				</lightning-combobox>
+				<lightning-input type="number" 
+								label="Tasas de IVA aplicables" 
+								value={percentageIVA} 
+								formatter="percent" 
+								disabled >
+				</lightning-input>
 				<br/>
 			</div>
 
@@ -66,7 +98,7 @@
 				<!-- List of Added Services -->
 				<div if:true={itemInCart} role="listbox">
 					<ul class="slds-listbox slds-listbox_vertical slds-p-top_small" role="presentation">
-						<template for:each={selectedPricebookItemsList} for:item="product">
+						<template for:each={confimedProductsList} for:item="product">
 							<li key={product.value} 
 								data-value={product.value} 
 								role="presentation"
@@ -84,10 +116,11 @@
 									<lightning-layout-item>
 										<div class="slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
 											<div style="text-align: end;">
-												<span  class="slds-truncate">Quantity ____ </span>
+												<span  class="slds-truncate">x{product.quantity}</span>
 												<span style="display: block;" class="slds-truncate grayTitle" title="Precio unitario">incl. IVA</span>
-												<span style="display: block;" class="slds-truncate" title={product.unitPrice}>{product.unitPrice}€</span>
-												<span  class="slds-truncate">Descuento ____ </span>
+												<span style="display: block;" class="slds-truncate slds-text-title_bold" title={product.unitPrice}>{product.newTotalPrice}€</span>
+												<span  class="slds-truncate grayTitle">Descuento </span>
+												<span  class="slds-truncate">{product.discount}%</span>
 											</div>
 										</div>
 									</lightning-layout-item>
@@ -121,13 +154,14 @@
 								type="date" 
 							 	name="input2" 
 							 	label="Fecha provisional para el inicio del trabajo" 
-							 	value="2020-09-07">
+							 	value={provisionalEndDate}
+								disabled>
 				</lightning-input>
 				<br/>
 				<lightning-input class="input-no-border"
 							 ype="number" 
 							 name="workDuration" 
-							 value="123" 
+							 value={stringServiceAppDuration} 
 							 label="Duración del trabajo (tiempo)" 
 							 readonly >
 				</lightning-input>
@@ -143,32 +177,33 @@
 
 			<!-- Coment -->
 			<div>
-			<lightning-textarea name="Coment" 
+			<lightning-textarea name="Comments" 
 								label="Comentario - Opcional" 
-								placeholder="Ej: Cliente ausente. Puerta de la vivenda dejada abierta a petición...">
+								placeholder="Ej: Cliente ausente. Puerta de la vivenda dejada abierta a petición..."
+								onchange={handleCommentsChange}>
 			</lightning-textarea>
 			</div>
 			
 			<!-- Footer Buttons -->
-			<div class="footer-container slds-m-top_xx-large slds-text-align_center">
+			<div class="footer-container slds-m-top_xx-large slds-text-align_center">		
 				<div class="buttons slds-p-top_small">
 					<lightning-button label="Registrar" 
 								title="Registrar" 
 								variant="brand"
 								onclick={handleRegistrar} 
-								class="buttons registrar-button">
+								class="buttons registrar-button"
+								disabled={lockCreatedButton}>
 					</lightning-button>
 				</div>
 				<div class="buttons slds-p-top_small">
 					<lightning-button label="Rechazar" 
-								title="Rechazar" 
+								title="Decline" 
 								variant="brand"
-								onclick={handleRechazar} 
-								class="buttons">
-								<!-- disabled-->
+								onclick={handleDecline}
+								class="buttons rechazar-button"
+								disabled={lockDeclineButton}>
 					</lightning-button>
 				</div>
-				
 				<div class="buttons slds-p-top_small">
 					<lightning-button label="Firma del cliente" 
 								title="FirmaDelCliente" 
@@ -177,11 +212,51 @@
 								class="buttons firma-button">
 				</lightning-button>
 				</div>
-				
 			</div>
 			
 		
 		</div>
+
+		<!-- Floated CONFIRM SCREEN -->
+		<div if:true={showConfirmedOpportunityScreen}>
+			<div class="float-container-confirm">
+				<div class="float-container-confirm-details slds-p-horizontal_medium slds-p-vertical_large">
+					<!-- Icon   -->
+					<div class="center-icon">
+						<lightning-icon 
+									size="medium"
+									icon-name="action:update_status" 
+									alternative-text="Confirm" 
+									title="Confirm">
+						</lightning-icon>
+					</div>
+
+					<!-- Title   -->
+					<span>El presupuesto ha sido registrado</span>
+
+					<!-- Footer Buttons -->
+					<div class="footer-container slds-m-top_xx-large slds-text-align_center">
+						<div class="buttons slds-p-top_small">
+							<lightning-button label="Volver al presupuesto" 
+									title="Cancel" 
+									variant="brand"
+									onclick={handlerBackToBudget} 
+									class="buttons backScreen-button">
+							</lightning-button>
+						</div>
+						<div class="buttons slds-p-top_small">
+							<lightning-button label="Terminar" 
+									title="Confirmar" 
+									variant="brand"
+									onclick={handlerTerminateScreen} 
+									class="terminate-button">
+							</lightning-button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 	</div>
 </template>
 

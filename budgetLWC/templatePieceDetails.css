@@ -68,27 +68,97 @@
     height: 0.3rem;
     border-radius: 2rem;
     margin: 0 auto;
+    transition: transform 0.3s ease;
+    display: block;
 }
 
-.float-container{
+.float-container {
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.8);
-    position: absolute;
+    background-color: rgba(255, 255, 255, 0.95);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 }
 
-.float-container-details{
-    position: relative; 
-    width: 97%; 
-    height: 100%; 
-    margin: 0 auto; 
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); 
-    background-color: #fff; top: 5rem;
+body.modal-open {
+    overflow: hidden;
 }
 
-.button-align-rigth{
+.button-align-rigth {
+    position: sticky;
+    top: 0;
+    right: 0;
     display: flex;
     justify-content: flex-end;
+    width: 100%;
+    padding: 15px 20px 10px 0;
+    z-index: 1002;
+}
+
+.float-container-details > :not(.button-align-rigth) {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.float-container-details {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    background-color: #fff;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+}
+
+.button-container {
+    margin-top: auto;
+    padding-bottom: 15px;
+    width: 100%;
+}
+
+.totalSelectedPiece{
+    top: -0.5rem;
+    width: 3.5rem;
+    --lwc-borderWidthThin: 0;
+}
+
+@media screen and (max-width: 480px) {
+    .float-container-details {
+        padding: 15px 10px;
+        width: 95%;
+    }
+
+    /* .totalSelectedPiece{
+        top: -0.5rem;
+        border: 0;
+    } */
+    
+    .button-actionContinue {
+        width: 100%;
+    }
+}
+
+.button-align-rigth {
+    position: sticky;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    padding: 15px 20px 10px 0;
+    z-index: 1002;
 }
 
 .icon-center{

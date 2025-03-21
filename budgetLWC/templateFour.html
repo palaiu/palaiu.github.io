@@ -1,0 +1,213 @@
+<template>
+	<div class="container" >
+
+		<!-- Back Icon -->
+		<div class="slds-p-top_small slds-p-left_x-small">
+			<lightning-button-icon class="back-icon" 
+								icon-name="utility:back"  
+								variant="container" 
+								alternative-text="Back" 
+								title="Back" 
+								onclick={handleBackButton}>
+			</lightning-button-icon>
+		</div>
+
+		<div class="slds-p-vertical_medium slds-p-horizontal_medium">
+			<!-- Title -->
+			<h1 class="titleComponent slds-p-bottom_x-large">Presupuesto piezas y mano de obra</h1>
+
+			<!-- Total Price -->
+			<div>
+				<p class="grayTitle">Total (incl. IVA)</p>
+				<span class="totalPrice">{servicesTotalValue}</span>
+				<span class="slds-text-title_bold">€</span>
+			</div>
+
+			<!-- Title and Client Information -->
+			<div class="slds-p-vertical_large">
+				<div class="slds-p-vertical_small">
+					<span class="slds-text-heading_medium">{budgetTitle}</span>
+				</div>
+				<span style="font-weight: 500;">Información del cliente</span>
+				<div class="slds-p-bottom_small">
+					<p>{selectedDestinatarioPresupuesto.label}</p>
+				</div>
+				<div class="slds-p-bottom_small">
+					<p>{selectedDestinatarioPresupuesto.phone}</p>
+				</div>
+				<div>
+					<p>{selectedDestinatarioPresupuesto.address.street}</p>
+					<p>{selectedDestinatarioPresupuesto.address.postalCode}</p>
+					<p>{selectedDestinatarioPresupuesto.address.city}, {selectedDestinatarioPresupuesto.address.state}</p>
+				</div>
+			</div>
+
+			<lightning-input class="slds-p-top_large"
+							type="checkbox" 
+							label="Declaro que la información anterior es precisa" 
+							name="CorrectInformation"
+							required>
+			</lightning-input>
+
+			<div class="divider slds-m-vertical_large"></div>
+
+			<p class="slds-p-bottom_large">{selectedRadioEquipments.label}</p>
+
+
+			<!-- Servicios principales -->
+			<div class="box-container slds-p-horizontal_medium slds-p-vertical_medium">
+				<p class="subTitle subTitle-center slds-p-horizontal_xx-small slds-p-vertical_xx-small">Servicios principales</p>
+
+				<!-- List of Added Services -->
+				<div if:true={itemInCart} role="listbox">
+					<ul class="slds-listbox slds-listbox_vertical slds-p-top_small" role="presentation">
+						<template for:each={confimedProductsList} for:item="product">
+							<li key={product.value} 
+								data-value={product.value} 
+								role="presentation"
+								onclick={selectSearchResult}
+								class="searchItemContainer slds-listbox__item slds-m-bottom_medium">
+								<lightning-layout horizontal-align="spread" class="lightning-layout" >
+									<!-- Name and Reference -->
+									<lightning-layout-item>
+										<div class="slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
+											<span title={product.label}>{product.label}</span>
+											<span style="display: block;" class="slds-truncate grayTitle" title={product.reference}>Ref: {product.reference}</span>
+										</div>
+									</lightning-layout-item>
+									<!-- Quantity, Discount and Price -->
+									<lightning-layout-item>
+										<div class="slds-p-horizontal_small slds-p-vertical_small  slds-media__body">
+											<div style="text-align: end;">
+												<span  class="slds-truncate">x{product.quantity}</span>
+												<span style="display: block;" class="slds-truncate grayTitle" title="Precio unitario">incl. IVA</span>
+												<span style="display: block;" class="slds-truncate slds-text-title_bold" title={product.unitPrice}>{product.newTotalPrice}€</span>
+												<span  class="slds-truncate grayTitle">Descuento </span>
+												<span  class="slds-truncate">{product.discount}%</span>
+											</div>
+										</div>
+									</lightning-layout-item>
+								</lightning-layout>
+							</li>
+						</template>
+					</ul>
+				</div>
+			</div>
+			<br/>
+
+
+			<!-- Servicios principales -->
+			<div class="box-container slds-p-horizontal_medium slds-p-vertical_medium">
+				<div>	
+					<p class="subTitle subTitle-center slds-p-horizontal_xx-small slds-p-vertical_xx-small">Servicios principales</p>
+				</div>
+
+				<div class="total-subContainer">
+					<span class="grayTitle">Total (excl. IVA)</span>
+					<span class="total-value">{totalPrincipalServices_WITHOUT_IVA}€</span>
+				</div>
+				<div class="total-subContainer">
+					<span class="grayTitle">IVA</span>
+					<span class="total-iva">{totalPrincipal_IVA}€</span>
+				</div>
+				<div class="divider slds-m-vertical_medium"></div>
+				<div class="total-subContainer">
+					<span class="grayTitle">Total (incl. IVA)</span>
+					<span class="total-value">{totalPrincipalServices_WITH_IVA}€</span>
+				</div>
+			</div>
+
+			<div class="divider slds-m-vertical_large"></div>
+
+			<lightning-input class="slds-p-bottom_large" 
+							type="checkbox" 
+							label="Quiero pagar el presupuesto por completo inmediatamente" 
+							name="PayAllNow">
+			</lightning-input>
+
+
+			<div>
+				<p class="subTitle slds-p-bottom_small">Servicios principales</p>
+				<div class="terms-subContainer slds-p-bottom_large">
+					<lightning-icon class="back-icon"
+									icon-name="utility:contract_doc"  
+									variant="container" 
+									alternative-text="Terms and conditions" 
+									title="TermsAndConditions" 
+									onclick={handleTerms}>
+					</lightning-icon>
+					<span class="grayTitle terms-label">Ver términos y condiciones</span>
+				</div>
+				<lightning-input class="slds-p-bottom_large"
+								type="checkbox" 
+								label="He leido, entiendo, y estoy de acuerdo con el presupuesto" 
+								name="AcceptCondictions">
+				</lightning-input>
+			</div>
+
+			<c-signature-l-w-c-implementation></c-signature-l-w-c-implementation>
+
+
+
+
+
+			
+			<!-- Footer Buttons -->
+			<div class="footer-container slds-m-top_xx-large slds-text-align_center">		
+				<div class="buttons slds-p-top_small">
+					<lightning-button label="Guardar y terminar" 
+								title="Decline" 
+								variant="brand"
+								onclick={aaaaaaaaaaaa}
+								class="buttons rechazar-button"
+								disabled={lockDeclineButton}>
+					</lightning-button>
+				</div>
+				<div class="buttons slds-p-top_small">
+					<lightning-button label="Validar" 
+								title="FirmaDelCliente" 
+								variant="brand"
+								onclick={aaaaaaaaaaaaaaa} 
+								class="buttons firma-button"
+								disabled={aaaaaaaaaaaaaaaaaaaaaa}>
+				</lightning-button>
+				</div>
+			</div>
+			
+		
+		</div>
+
+		<!-- Floated CONFIRM SCREEN -->
+		<div if:true={aaaaaaaaaaaaaaa}>
+			<div class="float-container-confirm">
+				<div class="float-container-confirm-details slds-p-horizontal_medium slds-p-vertical_large">
+					<!-- Icon   -->
+					<div class="center-icon">
+						<lightning-icon 
+									size="medium"
+									icon-name="action:update_status" 
+									alternative-text="Confirm" 
+									title="Confirm">
+						</lightning-icon>
+					</div>
+
+					<!-- Title   -->
+					<span>El presupuesto ha sido registrado</span>
+
+					<!-- Footer Buttons -->
+					<div class="footer-container slds-m-top_xx-large slds-text-align_center">
+						<div class="buttons slds-p-top_small">
+							<lightning-button label="Terminar" 
+									title="Confirmar" 
+									variant="brand"
+									onclick={handlerConfirmScreen} 
+									class="terminate-button">
+							</lightning-button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</template>
